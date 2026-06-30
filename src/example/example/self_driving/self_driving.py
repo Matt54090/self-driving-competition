@@ -31,7 +31,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from ros_robot_controller_msgs.msg import BuzzerState, SetPWMServoState, PWMServoState
 
 from gpiozero import LED
-from enum import Enum
+import common.ros_robot_controller_sdk as rrc
 
 
 class SelfDrivingNode(Node):
@@ -145,13 +145,11 @@ class SelfDrivingNode(Node):
         self.image_sub = None
         self.objects_info = []
 
-        self.right_led = LED(18)
-        self.left_led = LED(25)
+        self.board = rrc.Board()
         self.blue_led = LED(23)
         self.red_led = LED(24)
 
-        self.right_led.off()
-        self.left_led.off()
+        self.board.set_rgb([[1, 0, 0, 0], [2, 0, 0, 0]])
         self.blue_led.off()
         self.red_led.off()
 
@@ -278,19 +276,22 @@ class SelfDrivingNode(Node):
                 self.red_led.on()
                 self.blue_led.off()
             case "turn_start":
-                self.right_led.on()
+                self.board.set_rgb([[1, 255, 255, 0], [2, 0, 0, 0]])
             case "turn_end":
-                self.right_led.off()
+                self.board.set_rgb([[1, 0, 0, 0], [2, 0, 0, 0]])
 
     def led_blink(self):
-        for led in [self.red_led, self.blue_led, self.right_led, self.left_led]:
-            led.off()
+        self.red_led.off()
+        self.blue_led.off()
+        self.board.set_rgb([[1, 255, 255, 0], [2, 255, 255, 0]])
         time.sleep(0.2)
-        for led in [self.red_led, self.blue_led, self.right_led, self.left_led]:
-            led.on()
+        self.red_led.on()
+        self.blue_led.on()
+        self.board.set_rgb([[1, 0, 0, 0], [2, 0, 0, 0]])
         time.sleep(0.2)
-        for led in [self.red_led, self.blue_led, self.right_led, self.left_led]:
-            led.off()
+        self.red_led.off()
+        self.blue_led.off()
+        self.board.set_rgb([[1, 255, 255, 0], [2, 255, 255, 0]])
 
     def main(self):
         self.get_logger().info("\033[1;33m%s\033[0m" % self.is_running + "움직이는중")
